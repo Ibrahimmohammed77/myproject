@@ -1,0 +1,65 @@
+/* custom app */
+*, html, body{
+    font-family: 'Cairo', sans-serif;
+    direction: rtl;
+}
+
+.wrapper{
+    text-align: right !important;
+}
+
+/* navbar */
+.sidebar-toggle{margin-right: 0;margin-left: 1rem}
+.input-group.has-validation>.dropdown-toggle:nth-last-child(n+4),
+.input-group.has-validation>:nth-last-child(n+3):not(.dropdown-toggle):not(.dropdown-menu),
+.input-group:not(.has-validation)>.dropdown-toggle:nth-last-child(n+3),
+.input-group:not(.has-validation)>:not(:last-child):not(.dropdown-toggle):not(.dropdown-menu) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: initial;
+    border-bottom-right-radius: initial;
+}
+
+.input-group-navbar .form-control{
+    border-top-right-radius: 20px !important;
+    border-bottom-right-radius: 20px !important;
+    border-left: 0px !important;
+}
+
+.input-group-navbar .btn{
+    border-top-left-radius: 20px !important;
+    border-bottom-left-radius: 20px !important;
+    border-top-right-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
+    border-right: 0px !important;
+}
+
+.navbar-expand .navbar-nav{direction: rtl !important}
+.navbar-align{margin-left: 0 !important;margin-right: auto !important}
+.me-1 {margin-right: 0 !important;margin-left: .25rem!important}
+
+/* sidebar */
+.sidebar{direction: rtl !important}
+.sidebar.collapsed {margin: 0;margin-right: -260px !important}
+.sidebar-nav{padding-right: 0 !important;padding-left: auto !important;margin-right: 0 !important}
+.sidebar-link, a.sidebar-link{border-left: 0 !important;border-right: 3px solid transparent !important}
+
+.sidebar-item.active .sidebar-link:hover, .sidebar-item.active>.sidebar-link{
+    border-left-color: transparent !important;
+    background: linear-gradient(270deg, rgba(59,125,221,.1), rgba(59,125,221,.0875) 50%, transparent) !important;
+    border-right-color: #3b7ddd !important;
+}
+
+.sidebar-link i, .sidebar-link svg, a.sidebar-link i,
+a.sidebar-link svg{margin-right: 0 !important;margin-left: .75rem !important}
+.dropdown-menu-end[data-bs-popper]{right: auto !important;left: 0 !important;text-align: right !important}
+
+/* content */
+.analytics-item{direction: rtl}
+
+/* media */
+@media (min-width: 1px) and (max-width: 991.98px){
+    .sidebar {margin: 0;margin-right: -260px !important}
+    .sidebar.collapsed {margin: 0;margin-right: 0px !important}
+}
+/* end of custom app*/
