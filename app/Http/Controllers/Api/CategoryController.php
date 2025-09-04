@@ -7,111 +7,68 @@ use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use App\Services\CategoryService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Str;
 
 /**
  * @class CategoryController
- * @package App\Http\Controllers\Api
- *
- * @description
- *  وحدة تحكم لإدارة الأصناف (Categories).
- *  توفر عمليات CRUD كاملة مع دعم البحث، الفلترة، الاسترجاع، والحذف النهائي.
- *
- * @author إبراهيم
+ * @description CRUD للأصناف باستخدام طبقة Service
  */
 class CategoryController extends Controller
 {
     use ApiResponse;
 
     /**
-     * Display a listing of categories with support for filters and pagination.
-     *
+     * @var CategoryService
+     */
+    protected CategoryService $service;
+
+    /**
+     * @param CategoryService $service
+     */
+    public function __construct(CategoryService $service)
+    {
+        $this->service = $service;
+    }
+
+    /**
      * GET /api/categories
+     * عرض قائمة مع بحث/فلترة/ترتيب وتصفح.
      *
-     * Query Params:
-     * - search: string (بحث بالاسم/الوصف/slug)
-     * - is_active: bool (فلترة حسب حالة التفعيل)
-     * - sort: string (مثل name أو -name للترتيب النازل)
-     * - per_page: int (عدد النتائج في الصفحة، max 100)
-     * - with_trashed: bool (جلب الكل مع المحذوف)
-     * - only_trashed: bool (جلب المحذوف فقط)
-     *
-     * @param Request $request
+     * @param  Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(Request $request)
     {
-        $query = Category::query();
+        $paginator = $this->service->list($request->only([
+            'search', 'is_active', 'sort', 'per_page', 'with_trashed', 'only_trashed',
+        ]));
 
-        // مع المحذوفات
-        if ($request->boolean('with_trashed')) {
-            $query->withTrashed();
-        } elseif ($request->boolean('only_trashed')) {
-            $query->onlyTrashed();
-        }
-
-        // البحث
-        if ($search = $request->string('search')->trim()) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('slug', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        // حالة التفعيل
-        if (! is_null($request->query('is_active'))) {
-            $query->where('is_active', filter_var($request->query('is_active'), FILTER_VALIDATE_BOOLEAN));
-        }
-
-        // الترتيب
-        $allowedSorts = ['name', 'slug', 'created_at', 'updated_at', 'is_active'];
-        $sort = $request->query('sort', '-created_at');
-        $direction = str_starts_with($sort, '-') ? 'desc' : 'asc';
-        $column = ltrim($sort, '-');
-        if (! in_array($column, $allowedSorts, true)) {
-            $column = 'created_at';
-            $direction = 'desc';
-        }
-        $query->orderBy($column, $direction);
-
-        // التصفح
-        $perPage = (int) ($request->query('per_page', 15));
-        $perPage = $perPage > 0 && $perPage <= 100 ? $perPage : 15;
-
-        return CategoryResource::collection($query->paginate($perPage));
+        return CategoryResource::collection($paginator);
     }
 
     /**
-     * Store a newly created category in storage.
-     *
      * POST /api/categories
+     * إنشاء صنف جديد.
      *
-     * @param StoreCategoryRequest $request
+     * @param  StoreCategoryRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(StoreCategoryRequest $request)
     {
-        $data = $request->validated();
+        $category = $this->service->create($request->validated());
 
-        if (blank($data['slug'] ?? null)) {
-            $data['slug'] = Str::slug($data['name']);
-        }
-
-        $category = Category::create($data);
-
-        return $this->success("تم إنشاء الصنف بنجاح", new CategoryResource($category));
+        return $this->success('تم إنشاء الصنف بنجاح', new CategoryResource($category))
+            ->setStatusCode(Response::HTTP_CREATED);
     }
 
     /**
-     * Display the specified category.
-     *
      * GET /api/categories/{category}
+     * عرض صنف محدد.
      *
-     * @param Category $category
+     * @param  Category $category
      * @return CategoryResource
      */
     public function show(Category $category)
@@ -120,86 +77,73 @@ class CategoryController extends Controller
     }
 
     /**
-     * Update the specified category in storage.
-     *
      * PUT/PATCH /api/categories/{category}
+     * تحديث صنف.
      *
-     * @param UpdateCategoryRequest $request
-     * @param Category $category
+     * @param  UpdateCategoryRequest $request
+     * @param  Category $category
      * @return \Illuminate\Http\JsonResponse
      */
     public function update(UpdateCategoryRequest $request, Category $category)
     {
-        $data = $request->validated();
+        $category = $this->service->update($category, $request->validated());
 
-        if (array_key_exists('slug', $data) && blank($data['slug'])) {
-            $data['slug'] = Str::slug($data['name'] ?? $category->name);
-        }
-
-        $category->update($data);
-
-        return $this->success("تم تحديث الصنف بنجاح", new CategoryResource($category));
+        return $this->success('تم تحديث الصنف بنجاح', new CategoryResource($category));
     }
 
     /**
-     * Soft delete the specified category.
-     *
      * DELETE /api/categories/{category}
+     * حذف ناعم.
      *
-     * @param Category $category
+     * @param  Category $category
      * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Category $category)
     {
-        $category->delete();
-        return $this->success("تم حذف الصنف (Soft Delete) بنجاح", null);
+        $this->service->delete($category);
+
+        return $this->success('تم حذف الصنف (Soft Delete) بنجاح', null);
     }
 
     /**
-     * Restore a soft deleted category.
-     *
      * POST /api/categories/{id}/restore
+     * استرجاع صنف محذوف.
      *
-     * @param int $id
+     * @param  int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function restore($id)
+    public function restore(int $id)
     {
-        $category = Category::withTrashed()->findOrFail($id);
-        $category->restore();
+        $category = $this->service->restore($id);
 
-        return $this->success("تم استرجاع الصنف بنجاح", new CategoryResource($category));
+        return $this->success('تم استرجاع الصنف بنجاح', new CategoryResource($category));
     }
 
     /**
-     * Permanently delete a category from storage.
-     *
      * DELETE /api/categories/{id}/force
+     * حذف نهائي.
      *
-     * @param int $id
+     * @param  int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $category = Category::withTrashed()->findOrFail($id);
-        $category->forceDelete();
+        $this->service->forceDelete($id);
 
-        return $this->success("تم الحذف النهائي للصنف", null);
+        return $this->success('تم الحذف النهائي للصنف', null);
     }
 
     /**
-     * Toggle the active state of the specified category.
-     *
      * PATCH /api/categories/{category}/toggle
+     * تبديل حالة التفعيل.
      *
-     * @param Category $category
+     * @param  Category $category
      * @return \Illuminate\Http\JsonResponse
      */
     public function toggle(Category $category)
     {
-        $category->is_active = ! $category->is_active;
-        $category->save();
+        $category = $this->service->toggle($category);
 
-        return $this->success("تم تحديث حالة التفعيل", new CategoryResource($category));
+        return $this->success('تم تحديث حالة التفعيل', new CategoryResource($category));
     }
 }
