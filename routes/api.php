@@ -1,26 +1,17 @@
 <?php
 
-use App\Models\User;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\CategoryController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CategoryController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
-Route::get("/categories", function () {
-    return response()->json([
-        "name" => "Al-Shami",
-        "slug" => "al-shami",
-        "description" => "A popular Middle Eastern restaurant",
-        "is_active" => true
-    ]);
+Route::prefix('categories')->group(function () {
+    Route::get('/',           [CategoryController::class, 'index'])->name('categories.index');
+    Route::post('/',          [CategoryController::class, 'store'])->name('categories.store');
+    Route::get('/{category}', [CategoryController::class, 'show'])->name('categories.show');
+    Route::match(['put', 'patch'], '/{category}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+    // عمليات إضافية
+    Route::post('/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
+    Route::delete('/{id}/force',  [CategoryController::class, 'forceDelete'])->name('categories.force-delete');
+    Route::patch('/{category}/toggle', [CategoryController::class, 'toggle'])->name('categories.toggle');
 });
-
-// Route::post("/categories", function (Request $request) {
-//   $user= User::create($request->all());
-
-//   return response()->json($user, 201);
-// });
-
-Route::get("/categories", [CategoryController::class,'index']);
