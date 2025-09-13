@@ -2,33 +2,39 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Category extends Model
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
 
-    protected $fillable = ['name', 'slug', 'description', 'is_active'];
+    protected $fillable = [
+        'name', 'slug', 'description', 'is_active',
+    ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
+        'deleted_at' => 'immutable_datetime',
     ];
 
-
-
-    public $timestamps = false;
-
-
-
-    public function products()
+    protected static function booted(): void
     {
-        return $this->hasMany(Product::class, 'category_id', 'id');
-    }
+        static::creating(function (Category $category) {
+            // إن لم يصل slug، نولده من name لتفادي الخطأ 1364
+            if (blank($category->slug) && filled($category->name)) {
+                $category->slug = Str::slug($category->name);
+            }
+        });
 
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
+        static::saving(function (Category $category) {
+            // لو الاسم تغيّر ولم يرسل slug؛ نحدّث الـ slug تلقائيًا (اختياري)
+            if ($category->isDirty('name') && blank($category->slug)) {
+                $category->slug = Str::slug($category->name);
+            }
+        });
     }
 }

@@ -19,8 +19,15 @@ class Order extends Model
     public const PAYMENT_REFUNDED = 'REFUNDED';
 
     protected $fillable = [
-        'shipping_address_id', 'status', 'payment_status',
-        'subtotal', 'discount', 'shipping_fee', 'tax', 'total', 'currency'
+        'shipping_address_id',
+        'status',
+        'payment_status',
+        'subtotal',
+        'discount',
+        'shipping_fee',
+        'tax',
+        'total',
+        'currency'
     ];
 
     protected $casts = [
@@ -31,16 +38,31 @@ class Order extends Model
         'total'        => 'decimal:2',
     ];
 
-    public function shippingAddress() { return $this->belongsTo(Address::class, 'shipping_address_id'); }
-    public function orderItems()      { return $this->hasMany(OrderItem::class); }
+    public function shippingAddress()
+    {
+        return $this->belongsTo(Address::class, 'shipping_address_id');
+    }
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
     public function products()
     {
         return $this->belongsToMany(Product::class, 'order_items')
-            ->withPivot(['quantity','unit_price','subtotal','options'])
+            ->withPivot(['quantity', 'unit_price', 'subtotal', 'options'])
             ->withTimestamps();
     }
-    public function payment()         { return $this->hasOne(Payment::class); }
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
 
-    public function scopeCompleted($q) { return $q->where('status', self::STATUS_COMPLETED); }
-    public function scopePaid($q)      { return $q->where('payment_status', self::PAYMENT_PAID); }
+    public function scopeCompleted($q)
+    {
+        return $q->where('status', self::STATUS_COMPLETED);
+    }
+    public function scopePaid($q)
+    {
+        return $q->where('payment_status', self::PAYMENT_PAID);
+    }
 }

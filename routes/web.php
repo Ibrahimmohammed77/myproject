@@ -18,7 +18,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware('auth')->get('products', [ProductController::class, 'index']);
+Route::middleware('auth.admin')->get('products', [ProductController::class, 'index']);
 
 Route::prefix('products/')->as('products.')->middleware('auth')->group(function () {
 

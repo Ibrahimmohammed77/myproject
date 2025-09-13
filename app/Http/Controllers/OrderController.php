@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-   public function index(){
-     Order::create([
-        'nameAli'=>'j'
-    ]);
+   public function index() {}
+
+   public function store(Request $request)
+   {
+      $order = new  Order();
+      $order->products()->updateExistingPivot(1,[]);
    }
 }
