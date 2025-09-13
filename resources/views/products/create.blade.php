@@ -19,7 +19,7 @@
                                     <h5 class="card-title mb-0">Public info</h5>
                                 </div>
                                 <div class="card-body">
-                                    <form method="POST" action="{{ route('products.store') }}">
+                                    <form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data">
                                         @csrf
                                         <div class="row">
                                             <div class="col-md-8">
@@ -28,10 +28,11 @@
                                                     <input type="text" name="productName" class="form-control"
                                                         id="productName" placeholder="productName">
                                                 </div>
+                                                <input type="file" name="image" id="">
                                                 <x-input-error :messages="$errors->get('productName')" class="mt-2" />
 
                                                 <div class="mb-3">
-                                                    <label class="form-label" for="inputUsername">deacription</label>
+                                                    <label class="form-label" for="inputUsername">description</label>
                                                     <textarea rows="2" name="deacription" class="form-control" id="inputBio"
                                                         placeholder="Tell something about product"></textarea>
                                                 </div>

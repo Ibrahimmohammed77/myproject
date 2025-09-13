@@ -82,9 +82,9 @@ class CategoryService
      */
     public function create(array $data): Category
     {
-        if (empty($data['slug']) && !empty($data['name'])) {
-            $data['slug'] = Str::slug($data['name']);
-        }
+        // if (empty($data['slug']) && !empty($data['name'])) {
+        //     $data['slug'] = Str::slug($data['name']);
+        // }
 
         return Category::create($data);
     }
